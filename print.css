@@ -1,0 +1,77 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&display=swap");
+
+.sheet {
+  /* https://stackoverflow.com/questions/13605179/firefox-print-top-alignment-is-not-good-in-2nd-page */
+  margin-top: 1px;
+}
+
+table.print {
+  font-family: "Noto Serif JP", serif;
+  position: absolute;
+  top: 0mm;
+  left: 0mm;
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+}
+
+tbody,
+tr,
+td {
+  height: 100%;
+}
+td {
+  /* border: 1px solid #aaa; */
+  width: 20%;
+}
+
+.container {
+  /* border: 1px solid tomato; */
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  width: 100%;
+}
+
+.stamp {
+  margin-top: 10mm;
+  margin-bottom: 1em;
+  width: 100%;
+  font-size: 42pt;
+  font-weight: 900;
+}
+.stamp .kin,
+.stamp .tei {
+  text-align: center;
+}
+
+.name-area {
+  /* border: 1px solid purple; */
+  font-size: 40px;
+  font-weight: 700;
+  width: fit-content;
+  writing-mode: vertical-rl;
+  margin: auto auto 1.5em auto;
+}
+
+.name-area .col {
+  /* border: 3px double forestgreen; */
+  margin: 0 4px;
+  display: block;
+}
+.name-area .single {
+  /* color: red; */
+  font-size: 1em;
+}
+.name-area .twin {
+  /* color: blue; */
+  font-size: 0.9em;
+}
+.name-area .three {
+  /* color: orange; */
+  font-size: 0.8em;
+}
+.name-area .many {
+  /* color: gray; */
+  font-size: 0.75em;
+}

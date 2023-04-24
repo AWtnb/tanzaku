@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head prefix="og: http://ogp.me/ns#">
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <base target="_blank">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>print-page</title>
+    <!-- Chrome / Firefox / Edge -->
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20style%3D%22dominant-baseline%3Acentral%3Btext-anchor%3Amiddle%3Bfont-size%3A90px%3B%22%3E%F0%9F%96%A8%EF%B8%8F%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <!-- Safari / IE -->
+    <link rel="icon alternate" type="image/png"
+        href="https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/1f5a8.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.3.0/paper.css">
+    <link rel="stylesheet" type="text/css" href="./print.css">
+</head>
+
+<body class="A4 landscape">
+    <div id="app">
+        <sheets :sheets-arr="sheetsData"></sheets>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.37/dist/vue.global.js"></script>
+    <script>
+        const loadBaseData = () => {
+            const src = window.opener.document.querySelector("#user-input");
+            if (!src) {
+                return [{ names: ["織田信長"] }]
+            }
+            const lines = src.value.split(/\n/).map(line => String(line)).filter(line => line.trim());
+            return lines.map(line => {
+                return {
+                    names: line.replace(/\uff1b/g, ";").split(";").map(name => name.trim()).filter(Boolean)
+                }
+            });
+        }
+
+        class Allocator {
+            constructor(basedata, nRow, nCol) {
+                this.nRow = nRow;
+                this.nCol = nCol;
+                this.labelLimit = this.nRow * this.nCol;
+                this.basedata = basedata;
+                this.labels = this.basedata.map((d, i) => ({
+                    inner: d,
+                    className: (i == this.basedata.length - 1) ? "mark" : "unmark"
+                }));
+                this.fillRest();
+            }
+
+            fillRest() {
+                const exceed = this.basedata.length % this.labelLimit;
+                if (exceed < 1) {
+                    return;
+                }
+                const rest = this.labelLimit - this.basedata.length % this.labelLimit;
+                const unit = this.basedata.length;
+                for (let i = 0; i < rest; i++) {
+                    this.labels.push({
+                        inner: this.basedata[i % unit],
+                        className: (i % unit == unit - 1) ? "mark" : "unmark"
+                    });
+                }
+            }
+
+            allocate() {
+                const trs = [];
+                let cellStack = [];
+                for (let i = 0; i < this.labels.length; i++) {
+                    const label = this.labels[i];
+                    cellStack.push(label)
+                    if (cellStack.length == this.nCol) {
+                        trs.push({ cells: cellStack });
+                        cellStack = [];
+                    }
+                }
+                const sheets = [];
+                let rowStack = [];
+                for (let i = 0; i < trs.length; i++) {
+                    const tr = trs[i];
+                    rowStack.push(tr)
+                    if (rowStack.length == this.nRow) {
+                        sheets.push({ rows: rowStack });
+                        rowStack = [];
+                    }
+                }
+                return sheets;
+            }
+        }
+
+        const stamp = {
+            template: `
+    <div class="stamp">
+        <div class="kin">謹</div>
+        <div class="tei">呈</div>
+    </div>
+    `
+        }
+
+        const senders = {
+            props: ["names"],
+            computed: {
+                columns: function () {
+                    const stack = [];
+                    let pair = [];
+                    this.names.forEach((name, idx) => {
+                        pair.push(name);
+                        if (pair.length == 2 || idx == this.names.length - 1) {
+                            stack.push(pair.join("・"));
+                            pair = [];
+                        }
+                    });
+                    return stack;
+                },
+            },
+            template: `
+            <span class="col" v-for="(col, idx) in columns" :key="idx">{{ col }}</span>
+            `
+        }
+
+        const labelCell = {
+            props: ["labelData"],
+            components: {
+                "stamp": stamp,
+                "senders": senders
+            },
+            data: function () {
+                return {
+                    names: this.labelData.names
+                }
+            },
+            computed: {
+                isSingle: function () {
+                    return this.names.length == 1;
+                },
+                isTwin: function () {
+                    return this.names.length == 2;
+                },
+                isThree: function () {
+                    return this.names.length == 3;
+                },
+                isMany: function () {
+                    return !this.isSingle && !this.isTwin && !this.isThree;
+                },
+            },
+            template: `
+    <div class="container">
+        <stamp/>
+        <div class="name-area" contenteditable="true">
+        <div v-if="isMany" class="many">
+            <senders :names="names" />
+        </div>
+        <div v-else :class="{ single: isSingle, twin: isTwin, three: isThree }">
+            <span class="col" v-for="(name, idx) in names" :key="idx">{{ name }}</span>
+        </div>
+    </div>
+    </div>
+    `
+        }
+
+        const labelRow = {
+            props: ["cells"],
+            components: {
+                "label-cell": labelCell
+            },
+            template: `
+    <tr>
+        <td v-for="(cell, idx) in cells" :key="idx" :class="cell.className">
+            <label-cell :label-data="cell.inner"></label-cell>
+        </td>
+    </tr>
+    `
+        }
+
+        const labelSheet = {
+            props: ["rows"],
+            components: {
+                "label-row": labelRow
+            },
+            template: `
+    <section class="sheet">
+        <table class="print">
+            <tbody>
+                <label-row v-for="(r, idx) in rows" :key="idx" :cells="r.cells"></label-row>
+            </tbody>
+        </table>
+    </section>
+    `
+        }
+
+        const sheets = {
+            props: ["sheets-arr"],
+            components: {
+                "label-sheet": labelSheet
+            },
+            template: `
+    <div v-for="(sht, idx) in sheetsArr" :key="idx">
+        <label-sheet :rows="sht.rows"></label-sheet>
+    </div>
+    `
+        }
+
+        const vm = Vue.createApp({
+            data: function () {
+                return {
+                    basedata: loadBaseData(),
+                }
+            },
+            computed: {
+                sheetsData: function () {
+                    const alloc = new Allocator(this.basedata, 1, 5);
+                    return alloc.allocate();
+                }
+            },
+            components: {
+                "sheets": sheets
+            }
+        }).mount("#app");
+
+
+    </script>
+</body>
+
+</html>

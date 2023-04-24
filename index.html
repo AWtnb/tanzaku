@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head prefix="og: http://ogp.me/ns#">
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <base target="_blank">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chrome / Firefox / Edge -->
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20style%3D%22dominant-baseline%3Acentral%3Btext-anchor%3Amiddle%3Bfont-size%3A90px%3B%22%3E%F0%9F%8E%8B%3C%2Ftext%3E%3C%2Fsvg%3E">
+    <!-- Safari / IE -->
+    <link rel="icon alternate" type="image/png"
+        href="https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/1f38b.png" />
+    <link rel="stylesheet" type="text/css" href="./chota.min.css">
+    <style>
+        body {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+        }
+        textarea {
+            height: 400px;
+        }
+    </style>
+    <title>TAN-ZAK</title>
+</head>
+
+<body>
+    <h1>短冊メーカー</h1>
+    <div id="app">
+        <ul>
+            <li>改行区切り</li>
+            <li>人名の区切りは全角／半角セミコロン</li>
+        </ul>
+        <textarea id="user-input" v-model="content"></textarea>
+        <button @click="print">プリント</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.37/dist/vue.global.js"></script>
+    <script>
+
+        const sample = [
+            "野口英世",
+            "夏目漱石；樋口一葉",
+            "渋沢栄一；津田梅子；北里柴三郎",
+            "欧陽詢；虞世南；褚遂良；顔真卿",
+        ].join("\n");
+
+
+        const vm = Vue.createApp({
+            data: function () {
+                return {
+                    content: sample,
+                }
+            },
+            methods: {
+                print: function () {
+                    window.open("./print_page.html", "newwindow", "left=0");
+                }
+            }
+        }).mount("#app");
+
+
+    </script>
+</body>
+
+</html>
