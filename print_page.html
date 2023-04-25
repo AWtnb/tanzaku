@@ -13,11 +13,12 @@
     <!-- Safari / IE -->
     <link rel="icon alternate" type="image/png"
         href="https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/1f5a8.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.3.0/paper.css">
+    <link rel="stylesheet" type="text/css" href="./paper-b5.css">
     <link rel="stylesheet" type="text/css" href="./print.css">
+    <style>@page{ size: B5; size: landscape }</style>
 </head>
 
-<body class="A4 landscape">
+<body class="B5 landscape">
     <div id="app">
         <sheets :sheets-arr="sheetsData"></sheets>
     </div>
