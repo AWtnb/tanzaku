@@ -15,7 +15,12 @@
         href="https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/1f5a8.png" />
     <link rel="stylesheet" type="text/css" href="./css/paper-b5.css">
     <link rel="stylesheet" type="text/css" href="./css/print.css">
-    <style>@page{ size: B5; size: landscape }</style>
+    <style>
+        @page {
+            size: B5;
+            size: landscape
+        }
+    </style>
 </head>
 
 <body class="B5 landscape">
@@ -38,40 +43,39 @@
         }
 
         class Allocator {
-            constructor(basedata, nRow, nCol) {
-                this.nRow = nRow;
-                this.nCol = nCol;
-                this.labelLimit = this.nRow * this.nCol;
+            constructor(basedata) {
                 this.basedata = basedata;
                 this.labels = this.basedata.map((d, i) => ({
                     inner: d,
                     className: (i == this.basedata.length - 1) ? "mark" : "unmark"
                 }));
-                this.fillRest();
             }
 
-            fillRest() {
-                const exceed = this.basedata.length % this.labelLimit;
+            getFullData(labelLimit) {
+                const stack = this.labels;
+                const exceed = this.basedata.length % labelLimit;
                 if (exceed < 1) {
-                    return;
+                    return stack;
                 }
-                const rest = this.labelLimit - this.basedata.length % this.labelLimit;
+                const rest = labelLimit - this.basedata.length % labelLimit;
                 const unit = this.basedata.length;
                 for (let i = 0; i < rest; i++) {
-                    this.labels.push({
+                    stack.push({
                         inner: this.basedata[i % unit],
                         className: (i % unit == unit - 1) ? "mark" : "unmark"
                     });
                 }
+                return stack;
             }
 
-            allocate() {
+            allocate(nRow, nCol) {
+                const fullData = this.getFullData(nRow * nCol);
                 const trs = [];
                 const cellStack = [];
-                for (let i = 0; i < this.labels.length; i++) {
-                    const label = this.labels[i];
+                for (let i = 0; i < fullData.length; i++) {
+                    const label = fullData[i];
                     cellStack.push(label)
-                    if (cellStack.length == this.nCol) {
+                    if (cellStack.length == nCol) {
                         trs.push({ cells: cellStack.splice(0) }); // reset cellStack by splicing
                     }
                 }
@@ -80,7 +84,7 @@
                 for (let i = 0; i < trs.length; i++) {
                     const tr = trs[i];
                     rowStack.push(tr)
-                    if (rowStack.length == this.nRow) {
+                    if (rowStack.length == nRow) {
                         sheets.push({ rows: rowStack.splice(0) }); // reset rowStack by splicing
                     }
                 }
@@ -208,8 +212,8 @@
             },
             computed: {
                 sheetsData: function () {
-                    const alloc = new Allocator(this.basedata, 1, 5);
-                    return alloc.allocate();
+                    const alloc = new Allocator(this.basedata);
+                    return alloc.allocate(1, 5);
                 }
             },
             components: {
